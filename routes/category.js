@@ -21,7 +21,7 @@ router.post("/add", async (req,res)=>{
     const newCategory = queryRes.rows[0];
 
     console.log(`Added category:${queryRes.rows[0]}`);
-    return res.status(200).json({message: "Category successfully added",
+    return res.status(201).json({message: "Category successfully added",
         category: newCategory
     })
     }
@@ -67,5 +67,32 @@ router.put("/update/:id",async (req,res)=>{
         return res.status(500).json({message:"Internal server error",error: error.message})
     }
 });
+
+router.delete("/delete/:id",async (req,res)=>{
+    try{
+        const categoryId = req.params.id;
+
+        const query = {
+            text: `DELETE FROM categories WHERE id = $1 RETURNING *`,
+            values: [categoryId]
+        };
+
+        const queryRes = await pool.query(query);
+        const deletedCategory = queryRes.rows[0];
+
+        if(queryRes.rows.length === 0){
+            console.log("Category not found");
+            return res.status(404).json({message: "Category not found"});
+        }
+
+        console.log(`Category Name:${deletedCategory.name} Description:${deletedCategory.description} deleted successfully!`);
+        return res.status(200).json({message:`Category deleted successfully`,category: deletedCategory});
+    }
+    catch(error){
+        console.log(`Internal Server Error: ${error}`);
+        return res.status(500).json({message: `Internal Server Error`,error: error.message})
+    }
+
+})
 
 module.exports = router;
